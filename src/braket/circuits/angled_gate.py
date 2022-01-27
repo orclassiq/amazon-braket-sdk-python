@@ -86,6 +86,9 @@ class AngledGate(Gate, Parameterizable):
         """
         raise NotImplementedError
 
+    def adjoint(self) -> Gate:
+        return self.__class__(-self._angle)
+
     def __eq__(self, other):
         if isinstance(other, AngledGate):
             if isinstance(self.angle, FreeParameter):

@@ -1091,6 +1091,14 @@ class Circuit:
 
         return calculate_unitary(qubit_count, self.instructions)
 
+    def adjoint(self):
+        return Circuit(
+            [
+                instr ** -1 if isinstance(instr.operator, Gate) else instr
+                for instr in reversed(self.instructions)
+            ]
+        )
+
     @property
     def qubits_frozen(self) -> bool:
         """bool: Whether the circuit's qubits are frozen, that is, cannot be remapped.
@@ -1177,6 +1185,9 @@ class Circuit:
         for key, val in kwargs.items():
             param_values[str(key)] = val
         return self.make_bound_circuit(param_values)
+
+    def __getitem__(self, item):
+        return self.instructions[item]
 
 
 def subroutine(register=False):

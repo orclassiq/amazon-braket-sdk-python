@@ -52,9 +52,18 @@ class H(Gate):
     def to_matrix(self) -> np.ndarray:
         return 1.0 / np.sqrt(2.0) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
+
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -71,7 +80,7 @@ class H(Gate):
             >>> circ = Circuit().h(0)
             >>> circ = Circuit().h([0, 1, 2])
         """
-        return [Instruction(H(), target=qubit) for qubit in QubitSet(target)]
+        return H()(target)
 
 
 Gate.register_gate(H)
@@ -89,9 +98,17 @@ class I(Gate):  # noqa: E742, E261
     def to_matrix(self) -> np.ndarray:
         return np.eye(2, dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
+
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        if len(target) > 1:
+            return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -108,7 +125,7 @@ class I(Gate):  # noqa: E742, E261
             >>> circ = Circuit().i(0)
             >>> circ = Circuit().i([0, 1, 2])
         """
-        return [Instruction(I(), target=qubit) for qubit in QubitSet(target)]
+        return I()(target)
 
 
 Gate.register_gate(I)
@@ -126,9 +143,18 @@ class X(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
+
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -145,7 +171,7 @@ class X(Gate):
             >>> circ = Circuit().x(0)
             >>> circ = Circuit().x([0, 1, 2])
         """
-        return [Instruction(X(), target=qubit) for qubit in QubitSet(target)]
+        return X()(target)
 
 
 Gate.register_gate(X)
@@ -163,9 +189,18 @@ class Y(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
+
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -182,7 +217,7 @@ class Y(Gate):
             >>> circ = Circuit().y(0)
             >>> circ = Circuit().y([0, 1, 2])
         """
-        return [Instruction(Y(), target=qubit) for qubit in QubitSet(target)]
+        return Y()(target)
 
 
 Gate.register_gate(Y)
@@ -200,9 +235,18 @@ class Z(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
+
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -219,7 +263,7 @@ class Z(Gate):
             >>> circ = Circuit().z(0)
             >>> circ = Circuit().z([0, 1, 2])
         """
-        return [Instruction(Z(), target=qubit) for qubit in QubitSet(target)]
+        return Z()(target)
 
 
 Gate.register_gate(Z)
@@ -235,12 +279,20 @@ class S(Gate):
         return ir.S.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
-
         return np.array([[1.0, 0.0], [0.0, 1.0j]], dtype=complex)
+
+    def adjoint(self) -> Gate:
+        return Si()
 
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
+
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -257,7 +309,7 @@ class S(Gate):
             >>> circ = Circuit().s(0)
             >>> circ = Circuit().s([0, 1, 2])
         """
-        return [Instruction(S(), target=qubit) for qubit in QubitSet(target)]
+        return S()(target)
 
 
 Gate.register_gate(S)
@@ -275,9 +327,18 @@ class Si(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[1, 0], [0, -1j]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return S()
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
+
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -294,7 +355,7 @@ class Si(Gate):
             >>> circ = Circuit().si(0)
             >>> circ = Circuit().si([0, 1, 2])
         """
-        return [Instruction(Si(), target=qubit) for qubit in QubitSet(target)]
+        return Si()(target)
 
 
 Gate.register_gate(Si)
@@ -312,9 +373,18 @@ class T(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, np.exp(1j * np.pi / 4)]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return Ti()
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
+
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -331,7 +401,7 @@ class T(Gate):
             >>> circ = Circuit().t(0)
             >>> circ = Circuit().t([0, 1, 2])
         """
-        return [Instruction(T(), target=qubit) for qubit in QubitSet(target)]
+        return T()(target)
 
 
 Gate.register_gate(T)
@@ -349,9 +419,18 @@ class Ti(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, np.exp(-1j * np.pi / 4)]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return T()
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
+
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -368,7 +447,7 @@ class Ti(Gate):
             >>> circ = Circuit().ti(0)
             >>> circ = Circuit().ti([0, 1, 2])
         """
-        return [Instruction(Ti(), target=qubit) for qubit in QubitSet(target)]
+        return Ti()(target)
 
 
 Gate.register_gate(Ti)
@@ -386,9 +465,18 @@ class V(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.5 + 0.5j, 0.5 - 0.5j], [0.5 - 0.5j, 0.5 + 0.5j]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return Vi()
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
+
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -405,7 +493,7 @@ class V(Gate):
             >>> circ = Circuit().v(0)
             >>> circ = Circuit().v([0, 1, 2])
         """
-        return [Instruction(V(), target=qubit) for qubit in QubitSet(target)]
+        return V()(target)
 
 
 Gate.register_gate(V)
@@ -423,9 +511,18 @@ class Vi(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array(([[0.5 - 0.5j, 0.5 + 0.5j], [0.5 + 0.5j, 0.5 - 0.5j]]), dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return V()
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
+
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -442,7 +539,7 @@ class Vi(Gate):
             >>> circ = Circuit().vi(0)
             >>> circ = Circuit().vi([0, 1, 2])
         """
-        return [Instruction(Vi(), target=qubit) for qubit in QubitSet(target)]
+        return Vi()(target)
 
 
 Gate.register_gate(Vi)
@@ -492,6 +589,12 @@ class Rx(AngledGate):
         new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
         return type(self)(angle=new_angle)
 
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
+
     @staticmethod
     @circuit.subroutine(register=True)
     def rx(target: QubitInput, angle: Union[FreeParameter, float]) -> Iterable[Instruction]:
@@ -507,7 +610,7 @@ class Rx(AngledGate):
         Examples:
             >>> circ = Circuit().rx(0, 0.15)
         """
-        return [Instruction(Rx(angle), target=qubit) for qubit in QubitSet(target)]
+        return Rx(angle)(target)
 
 
 Gate.register_gate(Rx)
@@ -554,6 +657,12 @@ class Ry(AngledGate):
         new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
         return type(self)(angle=new_angle)
 
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
+
     @staticmethod
     @circuit.subroutine(register=True)
     def ry(target: QubitInput, angle: Union[FreeParameter, float]) -> Iterable[Instruction]:
@@ -569,7 +678,7 @@ class Ry(AngledGate):
         Examples:
             >>> circ = Circuit().ry(0, 0.15)
         """
-        return [Instruction(Ry(angle), target=qubit) for qubit in QubitSet(target)]
+        return Ry(angle)(target)
 
 
 Gate.register_gate(Ry)
@@ -616,6 +725,12 @@ class Rz(AngledGate):
     def fixed_qubit_count() -> int:
         return 1
 
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
+
     @staticmethod
     @circuit.subroutine(register=True)
     def rz(target: QubitInput, angle: Union[FreeParameter, float]) -> Iterable[Instruction]:
@@ -631,7 +746,7 @@ class Rz(AngledGate):
         Examples:
             >>> circ = Circuit().rz(0, 0.15)
         """
-        return [Instruction(Rz(angle), target=qubit) for qubit in QubitSet(target)]
+        return Rz(angle)(target)
 
 
 Gate.register_gate(Rz)
@@ -676,6 +791,12 @@ class PhaseShift(AngledGate):
     def fixed_qubit_count() -> int:
         return 1
 
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
+
     @staticmethod
     @circuit.subroutine(register=True)
     def phaseshift(target: QubitInput, angle: Union[FreeParameter, float]) -> Iterable[Instruction]:
@@ -691,7 +812,7 @@ class PhaseShift(AngledGate):
         Examples:
             >>> circ = Circuit().phaseshift(0, 0.15)
         """
-        return [Instruction(PhaseShift(angle), target=qubit) for qubit in QubitSet(target)]
+        return PhaseShift(angle)(target)
 
 
 Gate.register_gate(PhaseShift)
@@ -724,6 +845,12 @@ class CNot(Gate):
     def fixed_qubit_count() -> int:
         return 2
 
+    def adjoint(self) -> Gate:
+        return self
+
+    def __call__(self, control: QubitInput, target: QubitInput) -> Instruction:
+        return Instruction(self, target=[control, target])
+
     @staticmethod
     @circuit.subroutine(register=True)
     def cnot(control: QubitInput, target: QubitInput) -> Instruction:
@@ -739,7 +866,7 @@ class CNot(Gate):
         Examples:
             >>> circ = Circuit().cnot(0, 1)
         """
-        return Instruction(CNot(), target=[control, target])
+        return CNot()(control, target)
 
 
 Gate.register_gate(CNot)
@@ -765,9 +892,15 @@ class Swap(Gate):
             dtype=complex,
         )
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 2
+
+    def __call__(self, target1: QubitInput, target2: QubitInput) -> Instruction:
+        return Instruction(self, target=[target1, target2])
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -784,7 +917,7 @@ class Swap(Gate):
         Examples:
             >>> circ = Circuit().swap(0, 1)
         """
-        return Instruction(Swap(), target=[target1, target2])
+        return Swap()(target1, target2)
 
 
 Gate.register_gate(Swap)
@@ -810,9 +943,15 @@ class ISwap(Gate):
             dtype=complex,
         )
 
+    def adjoint(self) -> Gate:
+        return PSwap(3 * np.pi / 2)
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 2
+
+    def __call__(self, target1: QubitInput, target2: QubitInput) -> Instruction:
+        return Instruction(self, target=[target1, target2])
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -829,7 +968,7 @@ class ISwap(Gate):
         Examples:
             >>> circ = Circuit().iswap(0, 1)
         """
-        return Instruction(ISwap(), target=[target1, target2])
+        return ISwap()(target1, target2)
 
 
 Gate.register_gate(ISwap)
@@ -885,6 +1024,9 @@ class PSwap(AngledGate):
     def fixed_qubit_count() -> int:
         return 2
 
+    def __call__(self, target1: QubitInput, target2: QubitInput) -> Instruction:
+        return Instruction(self, target=[target1, target2])
+
     @staticmethod
     @circuit.subroutine(register=True)
     def pswap(target1: QubitInput, target2: QubitInput, angle: float) -> Instruction:
@@ -901,7 +1043,7 @@ class PSwap(AngledGate):
         Examples:
             >>> circ = Circuit().pswap(0, 1, 0.15)
         """
-        return Instruction(PSwap(angle), target=[target1, target2])
+        return PSwap(angle)(target1, target2)
 
 
 Gate.register_gate(PSwap)
@@ -961,6 +1103,9 @@ class XY(AngledGate):
     def fixed_qubit_count() -> int:
         return 2
 
+    def __call__(self, target1: QubitInput, target2: QubitInput) -> Instruction:
+        return Instruction(self, target=[target1, target2])
+
     @staticmethod
     @circuit.subroutine(register=True)
     def xy(
@@ -979,7 +1124,7 @@ class XY(AngledGate):
         Examples:
             >>> circ = Circuit().xy(0, 1, 0.15)
         """
-        return Instruction(XY(angle), target=[target1, target2])
+        return XY(angle)(target1, target2)
 
 
 Gate.register_gate(XY)
@@ -1024,6 +1169,9 @@ class CPhaseShift(AngledGate):
     def fixed_qubit_count() -> int:
         return 2
 
+    def __call__(self, control: QubitInput, target: QubitInput) -> Instruction:
+        return Instruction(self, target=[control, target])
+
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift(
@@ -1042,7 +1190,7 @@ class CPhaseShift(AngledGate):
         Examples:
             >>> circ = Circuit().cphaseshift(0, 1, 0.15)
         """
-        return Instruction(CPhaseShift(angle), target=[control, target])
+        return CPhaseShift(angle)(control, target)
 
 
 Gate.register_gate(CPhaseShift)
@@ -1087,6 +1235,9 @@ class CPhaseShift00(AngledGate):
     def fixed_qubit_count() -> int:
         return 2
 
+    def __call__(self, control: QubitInput, target: QubitInput) -> Instruction:
+        return Instruction(self, target=[control, target])
+
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift00(
@@ -1105,7 +1256,7 @@ class CPhaseShift00(AngledGate):
         Examples:
             >>> circ = Circuit().cphaseshift00(0, 1, 0.15)
         """
-        return Instruction(CPhaseShift00(angle), target=[control, target])
+        return CPhaseShift00(angle)(control, target)
 
 
 Gate.register_gate(CPhaseShift00)
@@ -1150,6 +1301,9 @@ class CPhaseShift01(AngledGate):
     def fixed_qubit_count() -> int:
         return 2
 
+    def __call__(self, control: QubitInput, target: QubitInput) -> Instruction:
+        return Instruction(self, target=[control, target])
+
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift01(
@@ -1168,7 +1322,7 @@ class CPhaseShift01(AngledGate):
         Examples:
             >>> circ = Circuit().cphaseshift01(0, 1, 0.15)
         """
-        return Instruction(CPhaseShift01(angle), target=[control, target])
+        return CPhaseShift01(angle)(control, target)
 
 
 Gate.register_gate(CPhaseShift01)
@@ -1213,6 +1367,9 @@ class CPhaseShift10(AngledGate):
     def fixed_qubit_count() -> int:
         return 2
 
+    def __call__(self, control: QubitInput, target: QubitInput) -> Instruction:
+        return Instruction(self, target=[control, target])
+
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift10(
@@ -1231,7 +1388,7 @@ class CPhaseShift10(AngledGate):
         Examples:
             >>> circ = Circuit().cphaseshift10(0, 1, 0.15)
         """
-        return Instruction(CPhaseShift10(angle), target=[control, target])
+        return CPhaseShift10(angle)(control, target)
 
 
 Gate.register_gate(CPhaseShift10)
@@ -1302,9 +1459,15 @@ class CY(Gate):
             dtype=complex,
         )
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 2
+
+    def __call__(self, control: QubitInput, target: QubitInput) -> Instruction:
+        return Instruction(self, target=[control, target])
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -1321,7 +1484,7 @@ class CY(Gate):
         Examples:
             >>> circ = Circuit().cy(0, 1)
         """
-        return Instruction(CY(), target=[control, target])
+        return CY()(control, target)
 
 
 Gate.register_gate(CY)
@@ -1339,9 +1502,15 @@ class CZ(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.diag([complex(1.0), 1.0, 1.0, -1.0])
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 2
+
+    def __call__(self, control: QubitInput, target: QubitInput) -> Instruction:
+        return Instruction(self, target=[control, target])
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -1358,7 +1527,7 @@ class CZ(Gate):
         Examples:
             >>> circ = Circuit().cz(0, 1)
         """
-        return Instruction(CZ(), target=[control, target])
+        return CZ()(control, target)
 
 
 Gate.register_gate(CZ)
@@ -1418,6 +1587,9 @@ class XX(AngledGate):
     def fixed_qubit_count() -> int:
         return 2
 
+    def __call__(self, target1: QubitInput, target2: QubitInput) -> Instruction:
+        return Instruction(self, target=[target1, target2])
+
     @staticmethod
     @circuit.subroutine(register=True)
     def xx(
@@ -1436,7 +1608,7 @@ class XX(AngledGate):
         Examples:
             >>> circ = Circuit().xx(0, 1, 0.15)
         """
-        return Instruction(XX(angle), target=[target1, target2])
+        return XX(angle)(target1, target2)
 
 
 Gate.register_gate(XX)
@@ -1496,6 +1668,9 @@ class YY(AngledGate):
     def fixed_qubit_count() -> int:
         return 2
 
+    def __call__(self, target1: QubitInput, target2: QubitInput) -> Instruction:
+        return Instruction(self, target=[target1, target2])
+
     @staticmethod
     @circuit.subroutine(register=True)
     def yy(
@@ -1514,7 +1689,7 @@ class YY(AngledGate):
         Examples:
             >>> circ = Circuit().yy(0, 1, 0.15)
         """
-        return Instruction(YY(angle), target=[target1, target2])
+        return YY(angle)(target1, target2)
 
 
 Gate.register_gate(YY)
@@ -1572,6 +1747,9 @@ class ZZ(AngledGate):
     def fixed_qubit_count() -> int:
         return 2
 
+    def __call__(self, target1: QubitInput, target2: QubitInput) -> Instruction:
+        return Instruction(self, target=[target1, target2])
+
     @staticmethod
     @circuit.subroutine(register=True)
     def zz(
@@ -1590,7 +1768,7 @@ class ZZ(AngledGate):
         Examples:
             >>> circ = Circuit().zz(0, 1, 0.15)
         """
-        return Instruction(ZZ(angle), target=[target1, target2])
+        return ZZ(angle)(target1, target2)
 
 
 Gate.register_gate(ZZ)
@@ -1623,9 +1801,17 @@ class CCNot(Gate):
             dtype=complex,
         )
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 3
+
+    def __call__(
+        self, control1: QubitInput, control2: QubitInput, target: QubitInput
+    ) -> Instruction:
+        return Instruction(self, target=[control1, control2, target])
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -1643,7 +1829,7 @@ class CCNot(Gate):
         Examples:
             >>> circ = Circuit().ccnot(0, 1, 2)
         """
-        return Instruction(CCNot(), target=[control1, control2, target])
+        return CCNot()(control1, control2, target)
 
 
 Gate.register_gate(CCNot)
@@ -1673,9 +1859,17 @@ class CSwap(Gate):
             dtype=complex,
         )
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 3
+
+    def __call__(
+        self, control: QubitInput, target1: QubitInput, target2: QubitInput
+    ) -> Instruction:
+        return Instruction(self, target=[control, target1, target2])
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -1693,7 +1887,7 @@ class CSwap(Gate):
         Examples:
             >>> circ = Circuit().cswap(0, 1, 2)
         """
-        return Instruction(CSwap(), target=[control, target1, target2])
+        return CSwap()(control, target1, target2)
 
 
 Gate.register_gate(CSwap)
@@ -1732,6 +1926,9 @@ class Unitary(Gate):
             matrix=Unitary._transform_matrix_to_ir(self._matrix),
         )
 
+    def adjoint(self) -> Gate:
+        return Unitary(self._matrix.conj().T, display_name=self.ascii_symbols[0] + "†")
+
     def __eq__(self, other):
         if isinstance(other, Unitary):
             return self.matrix_equivalence(other)
@@ -1740,6 +1937,9 @@ class Unitary(Gate):
     @staticmethod
     def _transform_matrix_to_ir(matrix: np.ndarray):
         return [[[element.real, element.imag] for element in row] for row in matrix.tolist()]
+
+    def __call__(self, targets: QubitSet) -> Instruction:
+        return Instruction(self, target=targets)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -1767,7 +1967,7 @@ class Unitary(Gate):
         if 2 ** len(targets) != matrix.shape[0]:
             raise ValueError("Dimensions of the supplied unitary are incompatible with the targets")
 
-        return Instruction(Unitary(matrix, display_name), target=targets)
+        return Unitary(matrix, display_name)(targets)
 
 
 Gate.register_gate(Unitary)
