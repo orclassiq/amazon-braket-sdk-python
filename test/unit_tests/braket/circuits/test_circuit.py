@@ -135,7 +135,19 @@ def test_call_one_param_not_bound():
     expected_parameters = set()
     expected_parameters.add(alpha)
 
-    assert new_circ == expected_circ and new_circ.parameters == expected_parameters
+    assert new_circ == expected_circ
+    assert new_circ.parameters == expected_parameters
+
+
+def test_call_one_noise_param_not_bound():
+    alpha = FreeParameter("alpha")
+    beta = FreeParameter("beta")
+    circ = Circuit().h(0).pauli_channel(0, alpha, beta, alpha)
+    new_circ = circ(alpha=0.01)
+    expected_circ = Circuit().h(0).pauli_channel(0, 0.01, beta, 0.01)
+
+    assert new_circ == expected_circ
+    assert beta in new_circ.parameters
 
 
 def test_call_with_default_parameter_val():

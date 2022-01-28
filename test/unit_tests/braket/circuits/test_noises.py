@@ -387,6 +387,7 @@ def test_parameterized_noise():
     assert noise.probY == 0.2
     assert noise.probZ == FreeParameter("b")
 
+
 # Additional Unitary noise tests
 
 

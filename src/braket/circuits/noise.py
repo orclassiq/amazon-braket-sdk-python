@@ -11,11 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Optional, Sequence, Union
+from typing import Any, List, Optional, Sequence, Union
 
+from braket.circuits.free_parameter import FreeParameter
+from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
-from braket.circuits.free_parameter import FreeParameter
 
 
 class Noise(QuantumOperator):
@@ -214,7 +215,7 @@ class SingleProbabilisticNoise_1516(Noise):
         return f"{self.name}('probability': {self.probability}, 'qubit_count': {self.qubit_count})"
 
 
-class PauliNoise(Noise):
+class PauliNoise(Noise, Parameterizable):
     """
     Class `PauliNoise` represents the general Pauli noise channel on N qubits
     parameterized by three probabilities.
@@ -249,27 +250,25 @@ class PauliNoise(Noise):
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
-        if not isinstance(probX, FreeParameter):
-            if not isinstance(probX, float):
-                raise TypeError("probX must be float type")
-            if not (probX <= 1.0 and probX >= 0.0):
-                raise ValueError("probX must be a real number in the interval [0,1]")
-        if not isinstance(probY, FreeParameter):
-            if not isinstance(probY, float):
-                raise TypeError("probY must be float type")
-            if not (probY <= 1.0 and probY >= 0.0):
-                raise ValueError("probY must be a real number in the interval [0,1]")
-        if not isinstance(probZ, FreeParameter):
-            if not isinstance(probZ, float):
-                raise TypeError("probZ must be float type")
-            if not (probZ <= 1.0 and probZ >= 0.0):
-                raise ValueError("probZ must be a real number in the interval [0,1]")
-#        if probX + probY + probZ > 1:
-#            raise ValueError("the sum of probX, probY, probZ cannot be larger than 1")
+        total = 0
+        self._parameters = []
+        total += self._add_param("probX", probX)
+        total += self._add_param("probY", probY)
+        total += self._add_param("probZ", probZ)
+        if total > 1:
+            raise ValueError("the sum of probX, probY, probZ cannot be larger than 1")
 
-        self._probX = probX
-        self._probY = probY
-        self._probZ = probZ
+    def _add_param(self, paramName, param: Union[FreeParameter, float]):
+        if isinstance(param, FreeParameter):
+            self._parameters.append(param)
+            return 0
+        else:
+            if not isinstance(param, float):
+                raise TypeError(f"{paramName} must be float type")
+            if not (param <= 1.0 and param >= 0.0):
+                raise ValueError(f"{paramName} must be a real number in the interval [0,1]")
+            self._parameters.append(float(param))
+            return param
 
     @property
     def probX(self) -> Union[FreeParameter, float]:
@@ -277,7 +276,7 @@ class PauliNoise(Noise):
         Returns:
             probX (Union[FreeParameter, float]): The probability of a Pauli X error.
         """
-        return self._probX
+        return self._parameters[0]
 
     @property
     def probY(self) -> Union[FreeParameter, float]:
@@ -285,7 +284,7 @@ class PauliNoise(Noise):
         Returns:
             probY (Union[FreeParameter, float]): The probability of a Pauli Y error.
         """
-        return self._probY
+        return self._parameters[1]
 
     @property
     def probZ(self) -> Union[FreeParameter, float]:
@@ -293,14 +292,59 @@ class PauliNoise(Noise):
         Returns:
             probZ (Union[FreeParameter, float]): The probability of a Pauli Z error.
         """
-        return self._probZ
+        return self._parameters[2]
 
     def __repr__(self):
-        return f"{self.name}('probX': {self.probX}, 'probY': {self.probY}, \
-'probZ': {self.probZ}, 'qubit_count': {self.qubit_count})"
+        return f"{self.name}('probX': {self._parameters[0]}, 'probY': {self._parameters[1]}, \
+'probZ': {self._parameters[2]}, 'qubit_count': {self.qubit_count})"
 
     def __str__(self):
-        return f"{self.name}({self.probX}, {self.probY}, {self.probZ})"
+        return f"{self.name}({self._parameters[0]}, {self._parameters[1]}, {self._parameters[2]})"
+
+    @property
+    def parameters(self) -> List[Union[FreeParameter, float]]:
+        """
+        Returns the free parameters associated with the object.
+
+        Returns:
+            Union[FreeParameter, float]: Returns the free parameters or fixed value
+            associated with the object.
+        """
+        return self._parameters
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.Rx: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        probX = self.probX if str(self.probX) not in kwargs else kwargs[str(self.probX)]
+        probY = self.probY if str(self.probY) not in kwargs else kwargs[str(self.probY)]
+        probZ = self.probZ if str(self.probZ) not in kwargs else kwargs[str(self.probZ)]
+
+        return type(self)(
+            probX=probX,
+            probY=probY,
+            probZ=probZ,
+            qubit_count=self.qubit_count,
+            ascii_symbols=self.ascii_symbols,
+        )
+
+    def __eq__(self, other):
+        if isinstance(other, PauliNoise):
+            return (
+                self.name == other.name
+                and self.probX == other.probX
+                and self.probY == other.probY
+                and self.probZ == other.probZ
+            )
+        return NotImplemented
 
 
 class DampingNoise(Noise):

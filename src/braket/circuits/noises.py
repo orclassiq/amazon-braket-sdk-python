@@ -17,6 +17,7 @@ import numpy as np
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
+from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import (
     DampingNoise,
@@ -33,7 +34,6 @@ from braket.circuits.quantum_operator_helpers import (
 )
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
-from braket.circuits.free_parameter import FreeParameter
 
 """
 To add a new Noise implementation:
@@ -226,15 +226,20 @@ class PauliChannel(PauliNoise):
     """
 
     def __init__(
-            self,
-            probX: Union[FreeParameter, float],
-            probY: Union[FreeParameter, float],
-            probZ: Union[FreeParameter, float]
+        self,
+        probX: Union[FreeParameter, float],
+        probY: Union[FreeParameter, float],
+        probZ: Union[FreeParameter, float],
     ):
-        symbols = ["PC(",
-                   str(probX) if isinstance(probX, FreeParameter) else "{:.2g}".format(probX), ",",
-                   str(probY) if isinstance(probY, FreeParameter) else "{:.2g}".format(probY), ",",
-                   str(probZ) if isinstance(probZ, FreeParameter) else "{:.2g}".format(probZ), ")"]
+        symbols = [
+            "PC(",
+            str(probX) if isinstance(probX, FreeParameter) else "{:.2g}".format(probX),
+            ",",
+            str(probY) if isinstance(probY, FreeParameter) else "{:.2g}".format(probY),
+            ",",
+            str(probZ) if isinstance(probZ, FreeParameter) else "{:.2g}".format(probZ),
+            ")",
+        ]
 
         super().__init__(
             probX=probX,
@@ -282,6 +287,24 @@ class PauliChannel(PauliNoise):
             Instruction(Noise.PauliChannel(probX=probX, probY=probY, probZ=probZ), target=qubit)
             for qubit in QubitSet(target)
         ]
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.Rx: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        probX = self.probX if str(self.probX) not in kwargs else kwargs[str(self.probX)]
+        probY = self.probY if str(self.probY) not in kwargs else kwargs[str(self.probY)]
+        probZ = self.probZ if str(self.probZ) not in kwargs else kwargs[str(self.probZ)]
+
+        return type(self)(probX=probX, probY=probY, probZ=probZ)
 
 
 Noise.register_noise(PauliChannel)

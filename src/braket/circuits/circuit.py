@@ -443,7 +443,7 @@ class Circuit:
         Returns:
             bool: Whether an object is parameterized.
         """
-        return issubclass(type(instruction.operator), Parameterizable) and all(
+        return issubclass(type(instruction.operator), Parameterizable) and any(
             isinstance(param, FreeParameter) for param in instruction.operator.parameters
         )
 

@@ -299,13 +299,20 @@ def test_single_probability_noise_1516_str(single_probability_noise_1516):
     assert str(single_probability_noise_1516) == expected
 
 
-def test_pauli_noise_str(pauli_noise):
+def test_pauli_noise_repr(pauli_noise):
     expected = "{}('probX': {}, 'probY': {}, 'probZ': {}, 'qubit_count': {})".format(
         pauli_noise.name,
         pauli_noise.probX,
         pauli_noise.probY,
         pauli_noise.probZ,
         pauli_noise.qubit_count,
+    )
+    assert pauli_noise.__repr__() == expected
+
+
+def test_pauli_noise_str(pauli_noise):
+    expected = "{}({}, {}, {})".format(
+        pauli_noise.name, pauli_noise.probX, pauli_noise.probY, pauli_noise.probZ
     )
     assert str(pauli_noise) == expected
 
