@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Iterable
+from typing import Iterable, Union
 
 import numpy as np
 
@@ -33,6 +33,7 @@ from braket.circuits.quantum_operator_helpers import (
 )
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.circuits.free_parameter import FreeParameter
 
 """
 To add a new Noise implementation:
@@ -224,13 +225,23 @@ class PauliChannel(PauliNoise):
     This noise channel is shown as `PC` in circuit diagrams.
     """
 
-    def __init__(self, probX: float, probY: float, probZ: float):
+    def __init__(
+            self,
+            probX: Union[FreeParameter, float],
+            probY: Union[FreeParameter, float],
+            probZ: Union[FreeParameter, float]
+    ):
+        symbols = ["PC(",
+                   str(probX) if isinstance(probX, FreeParameter) else "{:.2g}".format(probX), ",",
+                   str(probY) if isinstance(probY, FreeParameter) else "{:.2g}".format(probY), ",",
+                   str(probZ) if isinstance(probZ, FreeParameter) else "{:.2g}".format(probZ), ")"]
+
         super().__init__(
             probX=probX,
             probY=probY,
             probZ=probZ,
             qubit_count=None,
-            ascii_symbols=["PC({:.2g},{:.2g},{:.2g})".format(probX, probY, probZ)],
+            ascii_symbols=["".join(symbols)],
         )
 
     def to_ir(self, target: QubitSet):

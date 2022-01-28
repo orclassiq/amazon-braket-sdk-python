@@ -142,10 +142,9 @@ class Circuit:
         return self._moments.depth
 
     @property
-    def instructions(self) -> Iterable[Instruction]:
-        """Iterable[Instruction]: Get an `iterable` of instructions in the circuit."""
-
-        return self._moments.values()
+    def instructions(self) -> List[Instruction]:
+        """List[Instruction]: Get an `iterable` of instructions in the circuit."""
+        return list(self._moments.values())
 
     @property
     def result_types(self) -> List[ResultType]:

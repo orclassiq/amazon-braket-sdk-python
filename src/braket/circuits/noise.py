@@ -11,10 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Optional, Sequence
+from typing import Any, Optional, Sequence, Union
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
+from braket.circuits.free_parameter import FreeParameter
 
 
 class Noise(QuantumOperator):
@@ -221,15 +222,19 @@ class PauliNoise(Noise):
 
     def __init__(
         self,
-        probX: float,
-        probY: float,
-        probZ: float,
+        probX: Union[FreeParameter, float],
+        probY: Union[FreeParameter, float],
+        probZ: Union[FreeParameter, float],
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
         """
         Args:
-            probX [float], probY [float], probZ [float]: The coefficients of the Kraus operators
+            probX Union[FreeParameter, float]: The X coefficient of the Kraus operators
+                in the channel.
+            probY Union[FreeParameter, float]: The Y coefficient of the Kraus operators
+                in the channel.
+            probZ Union[FreeParameter, float]: The Z coefficient of the Kraus operators
                 in the channel.
             qubit_count (int, optional): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
@@ -239,57 +244,63 @@ class PauliNoise(Noise):
         Raises:
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`, `probX` or `probY` or `probZ`
-                is not `float`, `probX` or `probY` or `probZ` > 1.0, or
+                is not `float` or FreeParameter, `probX` or `probY` or `probZ` > 1.0, or
                 `probX` or `probY` or `probZ` < 0.0, or `probX`+`probY`+`probZ` > 1
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
-        if not isinstance(probX, float):
-            raise TypeError("probX must be float type")
-        if not (probX <= 1.0 and probX >= 0.0):
-            raise ValueError("probX must be a real number in the interval [0,1]")
-        if not isinstance(probY, float):
-            raise TypeError("probY must be float type")
-        if not (probY <= 1.0 and probY >= 0.0):
-            raise ValueError("probY must be a real number in the interval [0,1]")
-        if not isinstance(probZ, float):
-            raise TypeError("probZ must be float type")
-        if not (probZ <= 1.0 and probZ >= 0.0):
-            raise ValueError("probZ must be a real number in the interval [0,1]")
-        if probX + probY + probZ > 1:
-            raise ValueError("the sum of probX, probY, probZ cannot be larger than 1")
+        if not isinstance(probX, FreeParameter):
+            if not isinstance(probX, float):
+                raise TypeError("probX must be float type")
+            if not (probX <= 1.0 and probX >= 0.0):
+                raise ValueError("probX must be a real number in the interval [0,1]")
+        if not isinstance(probY, FreeParameter):
+            if not isinstance(probY, float):
+                raise TypeError("probY must be float type")
+            if not (probY <= 1.0 and probY >= 0.0):
+                raise ValueError("probY must be a real number in the interval [0,1]")
+        if not isinstance(probZ, FreeParameter):
+            if not isinstance(probZ, float):
+                raise TypeError("probZ must be float type")
+            if not (probZ <= 1.0 and probZ >= 0.0):
+                raise ValueError("probZ must be a real number in the interval [0,1]")
+#        if probX + probY + probZ > 1:
+#            raise ValueError("the sum of probX, probY, probZ cannot be larger than 1")
 
         self._probX = probX
         self._probY = probY
         self._probZ = probZ
 
     @property
-    def probX(self) -> float:
+    def probX(self) -> Union[FreeParameter, float]:
         """
         Returns:
-            probX (float): The probability of a Pauli X error.
+            probX (Union[FreeParameter, float]): The probability of a Pauli X error.
         """
         return self._probX
 
     @property
-    def probY(self) -> float:
+    def probY(self) -> Union[FreeParameter, float]:
         """
         Returns:
-            probY (float): The probability of a Pauli Y error.
+            probY (Union[FreeParameter, float]): The probability of a Pauli Y error.
         """
         return self._probY
 
     @property
-    def probZ(self) -> float:
+    def probZ(self) -> Union[FreeParameter, float]:
         """
         Returns:
-            probZ (float): The probability of a Pauli Z error.
+            probZ (Union[FreeParameter, float]): The probability of a Pauli Z error.
         """
         return self._probZ
 
     def __repr__(self):
         return f"{self.name}('probX': {self.probX}, 'probY': {self.probY}, \
 'probZ': {self.probZ}, 'qubit_count': {self.qubit_count})"
+
+    def __str__(self):
+        return f"{self.name}({self.probX}, {self.probY}, {self.probZ})"
 
 
 class DampingNoise(Noise):

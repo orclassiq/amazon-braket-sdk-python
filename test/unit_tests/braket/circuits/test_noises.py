@@ -16,6 +16,7 @@ import pytest
 
 import braket.ir.jaqcd as ir
 from braket.circuits import Circuit, Instruction, Noise, QubitSet
+from braket.circuits.free_parameter import FreeParameter
 from braket.ir.jaqcd.shared_models import (
     DampingProbability,
     DampingSingleProbability,
@@ -379,6 +380,12 @@ def test_fixed_qubit_count(testclass, subroutine_name, irclass, irsubclasses, kw
         noise = testclass(**create_valid_noise_class_input(irsubclasses, **kwargs))
         assert noise.qubit_count == fixed_qubit_count
 
+
+def test_parameterized_noise():
+    noise = Noise.PauliChannel(FreeParameter("a"), 0.2, FreeParameter("b"))
+    assert noise.probX == FreeParameter("a")
+    assert noise.probY == 0.2
+    assert noise.probZ == FreeParameter("b")
 
 # Additional Unitary noise tests
 
