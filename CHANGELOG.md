@@ -1,16 +1,5 @@
 # Changelog
 
-## v1.12.0 (2022-01-25)
-
-### Features
-
- * Added is_available property to AwsDevice
- * optimize IAM role retrieval
-
-### Bug Fixes and Other Changes
-
- * Enable jobs integration tests
-
 ## v1.11.1 (2021-12-09)
 
 ### Bug Fixes and Other Changes
@@ -482,4 +471,3 @@
 This is the public release of the Amazon Braket Python SDK!
 
 The Amazon Braket Python SDK is an open source library that provides a framework that you can use to interact with quantum computing devices through Amazon Braket.
-
