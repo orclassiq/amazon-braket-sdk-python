@@ -1086,6 +1086,7 @@ class Kraus(Noise):
             if not int(np.log2(matrix.shape[0])) == int(np.log2(matrices[0].shape[0])):
                 raise ValueError(f"all matrices in {matrices} must have the same shape")
         self._matrices = [np.array(matrix, dtype=complex) for matrix in matrices]
+        self._display_name = display_name
         qubit_count = int(np.log2(self._matrices[0].shape[0]))
         if qubit_count > 2:
             raise ValueError("Kraus operators with more than two qubits are not supported.")
@@ -1145,6 +1146,26 @@ class Kraus(Noise):
         return Instruction(
             Noise.Kraus(matrices=matrices, display_name=display_name), target=targets
         )
+
+    def serialize(self) -> dict:
+        return {
+            "__class__": self.__class__.__name__,
+            "matrices": self._matrices,
+            "display_name": self._display_name,
+        }
+
+    @classmethod
+    def deserialize(cls, noise: dict) -> Noise:
+        """
+        Deserializes a dictionary into this class.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Noise: A Noise object that represents the passed in dictionary.
+        """
+        return Kraus(matrices=noise["matrices"], display_name=noise["display_name"])
 
 
 Noise.register_noise(Kraus)

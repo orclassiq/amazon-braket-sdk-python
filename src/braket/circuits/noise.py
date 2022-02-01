@@ -108,6 +108,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         probability: Union[FreeParameter, float],
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
+        max_probability: float = 0.5,
     ):
         """
         Args:
@@ -127,8 +128,10 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         if not isinstance(probability, FreeParameter):
             if not isinstance(probability, float):
                 raise TypeError("probability must be float type")
-            if not (0.5 >= probability >= 0.0):
-                raise ValueError("probability must be a real number in the interval [0,1/2]")
+            if not (max_probability >= probability >= 0.0):
+                raise ValueError(
+                    f"probability must be a real number in the interval [0,{max_probability}]"
+                )
         self._probability = probability
 
     @property
@@ -214,13 +217,11 @@ class SingleProbabilisticNoise_34(SingleProbabilisticNoise):
                 `FreeParameter`, `probability` > 3/4, or `probability` < 0
         """
         super().__init__(
-            probability=probability, qubit_count=qubit_count, ascii_symbols=ascii_symbols
+            probability=probability,
+            qubit_count=qubit_count,
+            ascii_symbols=ascii_symbols,
+            max_probability=0.75,
         )
-
-        if isinstance(probability, float):
-            if not (0.75 >= probability >= 0.0):
-                raise ValueError("probability must be a real number in the interval [0,3/4]")
-        self._probability = probability
 
 
 class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):
@@ -249,12 +250,11 @@ class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):
                 `FreeParameter`, `probability` > 15/16, or `probability` < 0
         """
         super().__init__(
-            probability=probability, qubit_count=qubit_count, ascii_symbols=ascii_symbols
+            probability=probability,
+            qubit_count=qubit_count,
+            ascii_symbols=ascii_symbols,
+            max_probability=0.9375,
         )
-
-        if isinstance(probability, float):
-            if not (0.9375 >= probability >= 0.0):
-                raise ValueError("probability must be a real number in the interval [0,15/16]")
 
 
 class PauliNoise(Noise, Parameterizable):
