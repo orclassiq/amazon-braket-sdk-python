@@ -97,18 +97,21 @@ class Noise(QuantumOperator):
         setattr(cls, noise.__name__, noise)
 
 
-class SingleProbabilisticNoise(Noise):
+class SingleProbabilisticNoise(Noise, Parameterizable):
     """
     Class `SingleProbabilisticNoise` represents the bit/phase flip noise channel on N qubits
     parameterized by a single probability.
     """
 
     def __init__(
-        self, probability: float, qubit_count: Optional[int], ascii_symbols: Sequence[str]
+        self,
+        probability: Union[FreeParameter, float],
+        qubit_count: Optional[int],
+        ascii_symbols: Sequence[str],
     ):
         """
         Args:
-            probability (float): The probability that the noise occurs.
+            probability (Union[FreeParameter, float]): The probability that the noise occurs.
             qubit_count (int, optional): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
@@ -116,15 +119,16 @@ class SingleProbabilisticNoise(Noise):
 
         Raises:
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`, `probability` is not `float`,
-                `probability` > 1/2, or `probability` < 0
+                `ascii_symbols` length != `qubit_count`, `probability` is not `float` or
+                `FreeParameter`, `probability` > 1/2, or `probability` < 0
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
-        if not isinstance(probability, float):
-            raise TypeError("probability must be float type")
-        if not (probability <= 0.5 and probability >= 0.0):
-            raise ValueError("probability must be a real number in the interval [0,1/2]")
+        if not isinstance(probability, FreeParameter):
+            if not isinstance(probability, float):
+                raise TypeError("probability must be float type")
+            if not (0.5 >= probability >= 0.0):
+                raise ValueError("probability must be a real number in the interval [0,1/2]")
         self._probability = probability
 
     @property
@@ -138,19 +142,67 @@ class SingleProbabilisticNoise(Noise):
     def __repr__(self):
         return f"{self.name}('probability': {self.probability}, 'qubit_count': {self.qubit_count})"
 
+    @property
+    def parameters(self) -> List[Union[FreeParameter, float]]:
+        """
+        Returns the free parameters associated with the object.
 
-class SingleProbabilisticNoise_34(Noise):
+        Returns:
+            Union[FreeParameter, float]: Returns the free parameters or fixed value
+            associated with the object.
+        """
+        return [self._probability]
+
+    def __eq__(self, other):
+        if isinstance(other, type(self)):
+            return self.name == other.name and self.probability == other.probability
+        return NotImplemented
+
+    def serialize(self) -> dict:
+        return {
+            "__class__": self.__class__.__name__,
+            "probability": self.probability,
+            "qubit_count": self.qubit_count,
+            "ascii_symbols": self.ascii_symbols,
+        }
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Noise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        """
+        probability = (
+            self.probability
+            if str(self.probability) not in kwargs
+            else kwargs[str(self.probability)]
+        )
+        return type(self)(
+            probability=probability, qubit_count=self.qubit_count, ascii_symbols=self.ascii_symbols
+        )
+
+
+class SingleProbabilisticNoise_34(SingleProbabilisticNoise):
     """
     Class `SingleProbabilisticNoise` represents the Depolarizing and TwoQubitDephasing noise
     channels parameterized by a single probability.
     """
 
     def __init__(
-        self, probability: float, qubit_count: Optional[int], ascii_symbols: Sequence[str]
+        self,
+        probability: Union[FreeParameter, float],
+        qubit_count: Optional[int],
+        ascii_symbols: Sequence[str],
     ):
         """
         Args:
-            probability (float): The probability that the noise occurs.
+            probability (Union[FreeParameter, float]): The probability that the noise occurs.
             qubit_count (int, optional): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
@@ -158,41 +210,34 @@ class SingleProbabilisticNoise_34(Noise):
 
         Raises:
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`, `probability` is not `float`,
-                `probability` > 3/4, or `probability` < 0
+                `ascii_symbols` length != `qubit_count`, `probability` is not `float` or
+                `FreeParameter`, `probability` > 3/4, or `probability` < 0
         """
-        super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+        super().__init__(
+            probability=probability, qubit_count=qubit_count, ascii_symbols=ascii_symbols
+        )
 
-        if not isinstance(probability, float):
-            raise TypeError("probability must be float type")
-        if not (probability <= 0.75 and probability >= 0.0):
-            raise ValueError("probability must be a real number in the interval [0,3/4]")
+        if isinstance(probability, float):
+            if not (0.75 >= probability >= 0.0):
+                raise ValueError("probability must be a real number in the interval [0,3/4]")
         self._probability = probability
 
-    @property
-    def probability(self) -> float:
-        """
-        Returns:
-            probability (float): The probability that parameterizes the noise channel.
-        """
-        return self._probability
 
-    def __repr__(self):
-        return f"{self.name}('probability': {self.probability}, 'qubit_count': {self.qubit_count})"
-
-
-class SingleProbabilisticNoise_1516(Noise):
+class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):
     """
     Class `SingleProbabilisticNoise` represents the TwoQubitDepolarizing noise channel
     parameterized by a single probability.
     """
 
     def __init__(
-        self, probability: float, qubit_count: Optional[int], ascii_symbols: Sequence[str]
+        self,
+        probability: Union[FreeParameter, float],
+        qubit_count: Optional[int],
+        ascii_symbols: Sequence[str],
     ):
         """
         Args:
-            probability (float): The probability that the noise occurs.
+            probability (Union[FreeParameter, float]): The probability that the noise occurs.
             qubit_count (int, optional): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
@@ -200,27 +245,16 @@ class SingleProbabilisticNoise_1516(Noise):
 
         Raises:
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`, `probability` is not `float`,
-                `probability` > 15/16, or `probability` < 0
+                `ascii_symbols` length != `qubit_count`, `probability` is not `float` or
+                `FreeParameter`, `probability` > 15/16, or `probability` < 0
         """
-        super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+        super().__init__(
+            probability=probability, qubit_count=qubit_count, ascii_symbols=ascii_symbols
+        )
 
-        if not isinstance(probability, float):
-            raise TypeError("probability must be float type")
-        if not (probability <= 0.9375 and probability >= 0.0):
-            raise ValueError("probability must be a real number in the interval [0,15/16]")
-        self._probability = probability
-
-    @property
-    def probability(self) -> float:
-        """
-        Returns:
-            probability (float): The probability that parameterizes the noise channel.
-        """
-        return self._probability
-
-    def __repr__(self):
-        return f"{self.name}('probability': {self.probability}, 'qubit_count': {self.qubit_count})"
+        if isinstance(probability, float):
+            if not (0.9375 >= probability >= 0.0):
+                raise ValueError("probability must be a real number in the interval [0,15/16]")
 
 
 class PauliNoise(Noise, Parameterizable):
@@ -320,6 +354,16 @@ class PauliNoise(Noise, Parameterizable):
         """
         return self._parameters
 
+    def serialize(self) -> dict:
+        return {
+            "__class__": self.__class__.__name__,
+            "probX": self.probX,
+            "probY": self.probY,
+            "probZ": self.probZ,
+            "qubit_count": self.qubit_count,
+            "ascii_symbols": self.ascii_symbols,
+        }
+
     def bind_values(self, **kwargs):
         """
         Takes in parameters and attempts to assign them to values.
@@ -344,47 +388,22 @@ class PauliNoise(Noise, Parameterizable):
             ascii_symbols=self.ascii_symbols,
         )
 
-    def __eq__(self, other):
-        if isinstance(other, PauliNoise):
-            return (
-                self.name == other.name
-                and self.probX == other.probX
-                and self.probY == other.probY
-                and self.probZ == other.probZ
-            )
-        return NotImplemented
 
-    def serialize(self) -> dict:
-        return {
-            "__class__": self.__class__.__name__,
-            "probX": self.probX,
-            "probY": self.probY,
-            "probZ": self.probZ,
-            "qubit_count": self.qubit_count,
-            "ascii_symbols": self.ascii_symbols,
-        }
-
-    @classmethod
-    def deserialize(cls, noise: dict) -> Noise:
-        return PauliNoise(
-            probX=noise["probX"],
-            probY=noise["probY"],
-            probZ=noise["probZ"],
-            qubit_count=noise["qubit_count"],
-            ascii_symbols=noise["ascii_symbols"],
-        )
-
-
-class DampingNoise(Noise):
+class DampingNoise(Noise, Parameterizable):
     """
     Class `DampingNoise` represents a damping noise channel
     on N qubits parameterized by gamma.
     """
 
-    def __init__(self, gamma: float, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
+    def __init__(
+        self,
+        gamma: Union[FreeParameter, float],
+        qubit_count: Optional[int],
+        ascii_symbols: Sequence[str],
+    ):
         """
         Args:
-            gamma (float): Probability of damping.
+            gamma (Union[FreeParameter, float]): Probability of damping.
             qubit_count (int, optional): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
@@ -392,15 +411,16 @@ class DampingNoise(Noise):
 
             Raises:
                 ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`, `gamma` is not `float`,
+                `ascii_symbols` length != `qubit_count`, `gamma` is not `float` or `FreeParameter`,
                 `gamma` > 1.0, or `gamma` < 0.0.
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
-        if not isinstance(gamma, float):
-            raise TypeError("gamma must be float type")
-        if not (gamma <= 1.0 and gamma >= 0.0):
-            raise ValueError("gamma must be a real number in the interval [0,1]")
+        if not isinstance(gamma, FreeParameter):
+            if not isinstance(gamma, float):
+                raise TypeError("gamma must be float type")
+            if not (1.0 >= gamma >= 0.0):
+                raise ValueError("gamma must be a real number in the interval [0,1]")
         self._gamma = gamma
 
     @property
@@ -414,8 +434,49 @@ class DampingNoise(Noise):
     def __repr__(self):
         return f"{self.name}('gamma': {self.gamma}, 'qubit_count': {self.qubit_count})"
 
+    @property
+    def parameters(self) -> List[Union[FreeParameter, float]]:
+        """
+        Returns the free parameters associated with the object.
 
-class GeneralizedAmplitudeDampingNoise(DampingNoise):
+        Returns:
+            Union[FreeParameter, float]: Returns the free parameters or fixed value
+            associated with the object.
+        """
+        return [self._gamma]
+
+    def __eq__(self, other):
+        if isinstance(other, type(self)):
+            return self.name == other.name and self.gamma == other.gamma
+        return NotImplemented
+
+    def serialize(self) -> dict:
+        return {
+            "__class__": self.__class__.__name__,
+            "gamma": self.gamma,
+            "qubit_count": self.qubit_count,
+            "ascii_symbols": self.ascii_symbols,
+        }
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Noise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        """
+        gamma = self.gamma if str(self.gamma) not in kwargs else kwargs[str(self.gamma)]
+        return type(self)(
+            gamma=gamma, qubit_count=self.qubit_count, ascii_symbols=self.ascii_symbols
+        )
+
+
+class GeneralizedAmplitudeDampingNoise(DampingNoise, Parameterizable):
     """
     Class `GeneralizedAmplitudeDampingNoise` represents the generalized amplitude damping
     noise channel on N qubits parameterized by gamma and probability.
@@ -423,15 +484,16 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
 
     def __init__(
         self,
-        gamma: float,
-        probability: float,
+        gamma: Union[FreeParameter, float],
+        probability: Union[FreeParameter, float],
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
         """
         Args:
-            gamma (float): Probability of damping.
-            probability (float): Probability of the system being excited by the environment.
+            gamma (Union[FreeParameter, float]): Probability of damping.
+            probability (Union[FreeParameter, float]): Probability of the system being excited
+                by the environment.
             qubit_count (int): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
@@ -439,15 +501,17 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
 
             Raises:
                 ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`, `probability` or `gamma` is not `float`,
-                `probability` > 1.0, or `probability` < 0.0, `gamma` > 1.0, or `gamma` < 0.0.
+                `ascii_symbols` length != `qubit_count`, `probability` or `gamma` is not `float` or
+                `FreeParameter`, `probability` > 1.0, or `probability` < 0.0, `gamma` > 1.0, or
+                `gamma` < 0.0.
         """
         super().__init__(gamma=gamma, qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
-        if not isinstance(probability, float):
-            raise TypeError("probability must be float type")
-        if not (probability <= 1.0 and probability >= 0.0):
-            raise ValueError("probability must be a real number in the interval [0,1]")
+        if not isinstance(probability, FreeParameter):
+            if not isinstance(probability, float):
+                raise TypeError("probability must be float type")
+            if not (1.0 >= probability >= 0.0):
+                raise ValueError("probability must be a real number in the interval [0,1]")
         self._probability = probability
 
     @property
@@ -461,3 +525,57 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
     def __repr__(self):
         return f"{self.name}('gamma': {self.gamma}, 'probability': {self.probability}, \
 'qubit_count': {self.qubit_count})"
+
+    @property
+    def parameters(self) -> List[Union[FreeParameter, float]]:
+        """
+        Returns the free parameters associated with the object.
+
+        Returns:
+            Union[FreeParameter, float]: Returns the free parameters or fixed value
+            associated with the object.
+        """
+        return [self.gamma, self.probability]
+
+    def __eq__(self, other):
+        if isinstance(other, type(self)):
+            return (
+                self.name == other.name
+                and self.gamma == other.gamma
+                and self.probability == other.probability
+            )
+        return NotImplemented
+
+    def serialize(self) -> dict:
+        return {
+            "__class__": self.__class__.__name__,
+            "gamma": self.gamma,
+            "probability": self.probability,
+            "qubit_count": self.qubit_count,
+            "ascii_symbols": self.ascii_symbols,
+        }
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Noise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        """
+        gamma = self.gamma if str(self.gamma) not in kwargs else kwargs[str(self.gamma)]
+        probability = (
+            self.probability
+            if str(self.probability) not in kwargs
+            else kwargs[str(self.probability)]
+        )
+        return type(self)(
+            gamma=gamma,
+            probability=probability,
+            qubit_count=self.qubit_count,
+            ascii_symbols=self.ascii_symbols,
+        )
