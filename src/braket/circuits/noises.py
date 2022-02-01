@@ -306,6 +306,18 @@ class PauliChannel(PauliNoise):
 
         return type(self)(probX=probX, probY=probY, probZ=probZ)
 
+    def serialize(self) -> dict:
+        return {
+            "__class__": self.__class__.__name__,
+            "probX": self.probX,
+            "probY": self.probY,
+            "probZ": self.probZ,
+        }
+
+    @classmethod
+    def deserialize(cls, noise: dict) -> Noise:
+        return PauliChannel(probX=noise["probX"], probY=noise["probY"], probZ=noise["probZ"])
+
 
 Noise.register_noise(PauliChannel)
 
@@ -394,6 +406,13 @@ class Depolarizing(SingleProbabilisticNoise_34):
             Instruction(Noise.Depolarizing(probability=probability), target=qubit)
             for qubit in QubitSet(target)
         ]
+
+    def serialize(self) -> dict:
+        return {"__class__": self.__class__.__name__, "probability": self.probability}
+
+    @classmethod
+    def deserialize(cls, noise: dict) -> Noise:
+        return Depolarizing(probability=noise["probability"])
 
 
 Noise.register_noise(Depolarizing)

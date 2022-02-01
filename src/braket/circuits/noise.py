@@ -80,6 +80,14 @@ class Noise(QuantumOperator):
         return f"{self.name}('qubit_count': {self.qubit_count})"
 
     @classmethod
+    def deserialize(cls, noise: dict) -> "Noise":
+        if "__class__" in noise:
+            noise_name = noise["__class__"]
+            noise_cls = getattr(cls, noise_name)
+            return noise_cls.deserialize(noise)
+        raise NotImplementedError
+
+    @classmethod
     def register_noise(cls, noise: "Noise"):
         """Register a noise implementation by adding it into the Noise class.
 
@@ -345,6 +353,26 @@ class PauliNoise(Noise, Parameterizable):
                 and self.probZ == other.probZ
             )
         return NotImplemented
+
+    def serialize(self) -> dict:
+        return {
+            "__class__": self.__class__.__name__,
+            "probX": self.probX,
+            "probY": self.probY,
+            "probZ": self.probZ,
+            "qubit_count": self.qubit_count,
+            "ascii_symbols": self.ascii_symbols,
+        }
+
+    @classmethod
+    def deserialize(cls, noise: dict) -> Noise:
+        return PauliNoise(
+            probX=noise["probX"],
+            probY=noise["probY"],
+            probZ=noise["probZ"],
+            qubit_count=noise["qubit_count"],
+            ascii_symbols=noise["ascii_symbols"],
+        )
 
 
 class DampingNoise(Noise):
