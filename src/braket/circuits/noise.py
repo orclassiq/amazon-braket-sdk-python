@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.parameterizable import Parameterizable
@@ -138,7 +138,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
     def probability(self) -> float:
         """
         Returns:
-            probability (float): The probability that parameterizes the noise channel.
+            probability (float): The probability that parametrizes the noise channel.
         """
         return self._probability
 
@@ -257,10 +257,156 @@ class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):
         )
 
 
+class MultiQubitPauliNoise(Noise, Parameterizable):
+    """
+    Class `MultiQubitPauliNoise` represents a general multi-qubit Pauli channel,
+    parameterized by up to 4**N - 1 probabilities.
+    """
+
+    _allowed_substrings = {"I", "X", "Y", "Z"}
+
+    def __init__(
+        self,
+        probabilities: Dict[str, Union[FreeParameter, float]],
+        qubit_count: Optional[int],
+        ascii_symbols: Sequence[str],
+    ):
+        """[summary]
+
+        Args:
+            probabilities (Dict[str, Union[FreeParameter, float]]): A dictionary with Pauli string
+                as the keys, and the probabilities as values, i.e. {"XX": 0.1. "IZ": 0.2}.
+            qubit_count (Optional[int]): The number of qubits the Pauli noise acts on.
+            ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
+                printing a diagram of a circuit. The length must be the same as `qubit_count`, and
+                index ordering is expected to correlate with the target ordering on the instruction.
+
+        Raises:
+            ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
+                `ascii_symbols` length != `qubit_count`. Also if `probabilities` are
+                not `float`s or FreeParameters any `probabilities` > 1, or `probabilities` < 0, or
+                if the sum of all probabilities is > 1, or if "II" is specified as a Pauli string.
+                Also if any Pauli string contains invalid strings.
+                Also if the length of probabilities is greater than 4**qubit_count.
+            TypeError: If the type of the dictionary keys are not strings.
+                If the probabilities are not floats.
+        """
+
+        super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+        self._probabilities = probabilities
+
+        if not probabilities:
+            raise ValueError("Pauli dictionary must not be empty.")
+
+        identity = self.qubit_count * "I"
+        if identity in probabilities:
+            raise ValueError(
+                f"{identity} is not allowed as a key. Please enter only non-identity Pauli strings."
+            )
+
+        total_prob = 0
+        for pauli_string, prob in probabilities.items():
+            MultiQubitPauliNoise._validate_pauli_string(
+                pauli_string, self.qubit_count, self._allowed_substrings
+            )
+            if isinstance(prob, float):
+                if prob < 0.0 or prob > 1.0:
+                    raise ValueError(
+                        (
+                            "Individual probabilities must be real numbers in the interval [0, 1]. "
+                            f"Probability for {pauli_string} was {prob}."
+                        )
+                    )
+                total_prob += prob
+            elif not isinstance(prob, FreeParameter):
+                raise TypeError(
+                    (
+                        "Probabilities must be a float or FreeParameter type. "
+                        f"The probability for {pauli_string} was of type {type(prob)}."
+                    )
+                )
+        if total_prob > 1.0 or total_prob < 0.0:
+            raise ValueError(
+                (
+                    "Total probability must be a real number in the interval [0, 1]. "
+                    f"Total probability was {total_prob}."
+                )
+            )
+
+    @classmethod
+    def _validate_pauli_string(cls, pauli_str, qubit_count, allowed_substrings):
+        if not isinstance(pauli_str, str):
+            raise TypeError(f"Type of {pauli_str} was not a string.")
+        if len(pauli_str) != qubit_count:
+            raise ValueError(
+                (
+                    "Length of each Pauli string must be equal to number of qubits. "
+                    f"{pauli_str} had length {len(pauli_str)} instead of length {qubit_count}."
+                )
+            )
+        if not set(pauli_str) <= allowed_substrings:
+            raise ValueError(
+                (
+                    "Strings must be Pauli strings consisting of only [I, X, Y, Z]. "
+                    f"Received {pauli_str}."
+                )
+            )
+
+    def __repr__(self):
+        return f"{self.name}('probabilities' : {self._probabilities}, 'qubit_count': {self.qubit_count})"  # noqa
+
+    def __eq__(self, other):
+        if isinstance(other, type(self)):
+            return self.name == other.name and self._probabilities == other._probabilities
+        return NotImplemented
+
+    @property
+    def parameters(self) -> List[Union[FreeParameter, float]]:
+        """
+        Returns the free parameters associated with the object.
+
+        Returns:
+            Union[FreeParameter, float]: Returns the free parameters or fixed value
+            associated with the object.
+        """
+        return list(self._probabilities.values())
+
+    def serialize(self) -> dict:
+        return {
+            "__class__": self.__class__.__name__,
+            "probabilities": self._probabilities,
+            "qubit_count": self.qubit_count,
+            "ascii_symbols": self.ascii_symbols,
+        }
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.Rx: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        probabilities = {}
+        for pauli_string, prob in self._probabilities.items():
+            bound_prob = prob if str(prob) not in kwargs else kwargs[str(prob)]
+            probabilities[pauli_string] = bound_prob
+
+        return type(self)(
+            probabilities=probabilities,
+            qubit_count=self.qubit_count,
+            ascii_symbols=self.ascii_symbols,
+        )
+
+
 class PauliNoise(Noise, Parameterizable):
     """
-    Class `PauliNoise` represents the general Pauli noise channel on N qubits
-    parameterized by three probabilities.
+    Class `PauliNoise` represents the a single-qubit Pauli noise channel
+    acting on one qubit. It is parameterized by three probabilities.
     """
 
     def __init__(
@@ -342,6 +488,11 @@ class PauliNoise(Noise, Parameterizable):
 
     def __str__(self):
         return f"{self.name}({self._parameters[0]}, {self._parameters[1]}, {self._parameters[2]})"
+
+    def __eq__(self, other):
+        if isinstance(other, type(self)):
+            return self.name == other.name and self._parameters == other._parameters
+        return NotImplemented
 
     @property
     def parameters(self) -> List[Union[FreeParameter, float]]:

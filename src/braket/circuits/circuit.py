@@ -1093,7 +1093,7 @@ class Circuit:
     def adjoint(self):
         return Circuit(
             [
-                instr ** -1 if isinstance(instr.operator, Gate) else instr
+                instr**-1 if isinstance(instr.operator, Gate) else instr
                 for instr in reversed(self.instructions)
             ]
         )

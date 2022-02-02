@@ -22,6 +22,7 @@ from braket.ir.jaqcd.shared_models import (
     DampingSingleProbability,
     DoubleControl,
     DoubleTarget,
+    MultiProbability,
     MultiTarget,
     SingleControl,
     SingleProbability,
@@ -69,6 +70,13 @@ testdata = [
         "two_qubit_dephasing",
         ir.TwoQubitDephasing,
         [DoubleTarget, SingleProbability_34],
+        {},
+    ),
+    (
+        Noise.TwoQubitPauliChannel,
+        "two_qubit_pauli_channel",
+        ir.MultiQubitPauliChannel,
+        [DoubleTarget, MultiProbability],
         {},
     ),
     (
@@ -179,6 +187,14 @@ def two_dimensional_matrix_list_valid_input(**kwargs):
     }
 
 
+def multi_probability_valid_input(**kwargs):
+    return {"probabilities": {"XX": 0.1}}
+
+
+def multi_probability_invalid_input(**kwargs):
+    return {"probabilities": {"XX": 1.1}}
+
+
 valid_ir_switcher = {
     "SingleTarget": single_target_valid_input,
     "DoubleTarget": double_target_valid_ir_input,
@@ -188,6 +204,7 @@ valid_ir_switcher = {
     "DampingProbability": damping_probability_valid_input,
     "DampingSingleProbability": damping_single_probability_valid_input,
     "TripleProbability": triple_probability_valid_input,
+    "MultiProbability": multi_probability_valid_input,
     "SingleControl": single_control_valid_input,
     "DoubleControl": double_control_valid_ir_input,
     "MultiTarget": multi_target_valid_input,
@@ -246,6 +263,7 @@ def create_valid_target_input(irsubclasses):
                 DampingProbability,
                 TripleProbability,
                 TwoDimensionalMatrixList,
+                MultiProbability,
             ]
         ):
             pass
@@ -269,6 +287,8 @@ def create_valid_noise_class_input(irsubclasses, **kwargs):
         input.update(damping_probability_valid_input())
     if TripleProbability in irsubclasses:
         input.update(triple_probability_valid_input())
+    if MultiProbability in irsubclasses:
+        input.update(multi_probability_valid_input())
     if TwoDimensionalMatrixList in irsubclasses:
         input.update(two_dimensional_matrix_list_valid_input(**kwargs))
     return input
@@ -302,6 +322,7 @@ def calculate_qubit_count(irsubclasses):
                 DampingSingleProbability,
                 DampingProbability,
                 TripleProbability,
+                MultiProbability,
                 TwoDimensionalMatrixList,
             ]
         ):
@@ -359,6 +380,8 @@ def test_noise_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwa
             subroutine_input.update(damping_probability_valid_input())
         if TripleProbability in irsubclasses:
             subroutine_input.update(triple_probability_valid_input())
+        if MultiProbability in irsubclasses:
+            subroutine_input.update(multi_probability_valid_input())
 
         circuit1 = subroutine(**subroutine_input)
         circuit2 = Circuit(instruction_list)
@@ -417,6 +440,11 @@ def test_serialization(testclass, subroutine_name, irclass, irsubclasses, kwargs
             Noise.TwoQubitDephasing(0.1),
         ),
         (
+            Noise.TwoQubitPauliChannel({"XX": FreeParameter("x"), "YY": FreeParameter("y")}),
+            {"x": 0.1},
+            Noise.TwoQubitPauliChannel({"XX": 0.1, "YY": FreeParameter("y")}),
+        ),
+        (
             Noise.PauliChannel(FreeParameter("x"), FreeParameter("y"), FreeParameter("z")),
             {"x": 0.1, "z": 0.2},
             Noise.PauliChannel(0.1, FreeParameter("y"), 0.2),
@@ -449,3 +477,31 @@ def test_kraus_matrix_target_size_mismatch():
     Circuit().kraus(
         matrices=[np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])], targets=[0]
     )
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize(
+    "probs",
+    [
+        {"X": -0.1},
+        {"XY": 1.1},
+        {"TX": 0.1},
+        {"X": 0.5, "Y": 0.6},
+        {"X": 0.1, "YY": 0.2},
+        {"II": 0.9, "XX": 0.1},
+    ],
+)
+def test_invalid_values_pauli_channel_two_qubit(probs):
+    Noise.TwoQubitPauliChannel(probs)
+
+
+@pytest.mark.parametrize(
+    "probs",
+    [
+        {"XY": 0.1},
+        {"XX": 0.1, "ZZ": 0.2},
+    ],
+)
+def test_valid_values_pauli_channel_two_qubit(probs):
+    noise = Noise.TwoQubitPauliChannel(probs)
+    assert len(noise.to_matrix()) == 16

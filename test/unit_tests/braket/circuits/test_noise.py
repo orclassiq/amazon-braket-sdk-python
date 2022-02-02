@@ -18,6 +18,7 @@ from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.noise import (
     DampingNoise,
     GeneralizedAmplitudeDampingNoise,
+    MultiQubitPauliNoise,
     Noise,
     PauliNoise,
     SingleProbabilisticNoise,
@@ -375,9 +376,21 @@ def test_equality():
             GeneralizedAmplitudeDampingNoise(0.2, 0.2, 1, ["foo"]),
             GeneralizedAmplitudeDampingNoise(FreeParameter("alpha"), 0.2, 1, ["foo"]),
         ),
+        (
+            PauliNoise(0.1, 0.2, 0.3, 1, ["foo"]),
+            PauliNoise(0.1, 0.2, 0.3, 1, ["foo"]),
+            PauliNoise(0.2, 0.2, 0.3, 1, ["foo"]),
+            PauliNoise(FreeParameter("x"), FreeParameter("y"), FreeParameter("z"), 1, ["foo"]),
+        ),
+        (
+            MultiQubitPauliNoise({"X": 0.2}, 1, ["foo"]),
+            MultiQubitPauliNoise({"X": 0.2}, 1, ["foo"]),
+            MultiQubitPauliNoise({"X": 0.3}, 1, ["foo"]),
+            MultiQubitPauliNoise({"X": FreeParameter("alpha")}, 1, ["foo"]),
+        ),
     ],
 )
-def test_single_probability_noise_equality(target_noise, equal_noise, unequal_noise, param_noise):
+def test_noise_equality(target_noise, equal_noise, unequal_noise, param_noise):
     assert target_noise == target_noise
     assert target_noise is target_noise
     assert target_noise == equal_noise
@@ -460,6 +473,11 @@ def test_generalized_amplitude_damping_noise_serialization(generalized_amplitude
             SingleProbabilisticNoise(0.1, 1, ["foo"]),
         ),
         (
+            MultiQubitPauliNoise({"X": FreeParameter("alpha")}, 1, ["foo"]),
+            {"alpha": 0.1},
+            MultiQubitPauliNoise({"X": 0.1}, 1, ["foo"]),
+        ),
+        (
             PauliNoise(FreeParameter("x"), FreeParameter("y"), FreeParameter("z"), 1, ["foo"]),
             {"x": 0.1, "y": 0.2, "z": 0.3},
             PauliNoise(0.1, 0.2, 0.3, 1, ["foo"]),
@@ -490,6 +508,8 @@ def test_parameter_binding(parameterized_noise, params, expected_noise):
         (SingleProbabilisticNoise_34, {"probability": -0.1}),
         (SingleProbabilisticNoise_1516, {"probability": 0.93755}),
         (SingleProbabilisticNoise_1516, {"probability": -0.1}),
+        (MultiQubitPauliNoise, {"probabilities": {"X": 0.4, "Y": 0.7}}),
+        (MultiQubitPauliNoise, {"probabilities": {"X": 0.4, "Y": -0.7}}),
         (PauliNoise, {"probX": 0.5, "probY": 0.5, "probZ": 0.5}),
         (PauliNoise, {"probX": -0.1, "probY": 0, "probZ": 0}),
         (DampingNoise, {"gamma": -0.1}),
@@ -501,3 +521,49 @@ def test_parameter_binding(parameterized_noise, params, expected_noise):
 @pytest.mark.xfail(raises=ValueError)
 def test_invalid_values(noise_class, params):
     noise_class(**params, qubit_count=1, ascii_symbols=["foo"])
+
+
+@pytest.mark.parametrize(
+    "probs, qubit_count, ascii_symbols", [({"X": 0.1}, 1, ["PC"]), ({"XX": 0.1}, 2, ["PC2", "PC2"])]
+)
+def test_multi_qubit_noise(probs, qubit_count, ascii_symbols):
+    MultiQubitPauliNoise(probs, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=ValueError)
+class TestMultiQubitNoise:
+    qubit_count = 1
+    ascii_symbols = ["PC2"]
+
+    def test_non_empty(self):
+        MultiQubitPauliNoise({}, self.qubit_count, self.ascii_symbols)
+
+    def test_non_identity(self):
+        MultiQubitPauliNoise({"I": 0.1}, self.qubit_count, self.ascii_symbols)
+
+    def test_non_equal_length_paulis(self):
+        MultiQubitPauliNoise({"X": 0.1, "XY": 0.1}, 1, self.ascii_symbols)
+        MultiQubitPauliNoise({"X": 0.1, "Y": 0.1}, 2, ["PC2", "PC2"])
+
+    def test_prob_over_one(self):
+        MultiQubitPauliNoise({"X": 0.9, "Y": 0.9}, 1, self.ascii_symbols)
+        MultiQubitPauliNoise({"XX": 0.9, "YY": 0.9}, 1, self.ascii_symbols)
+
+    def test_prob_under_one(self):
+        MultiQubitPauliNoise({"X": -0.6, "Y": -0.9}, 1, self.ascii_symbols)
+        MultiQubitPauliNoise({"XX": -0.9, "YY": -0.9}, 2, ["PC2", "PC2"])
+
+    def test_non_pauli_string(self):
+        MultiQubitPauliNoise({"T": 0.1}, 1, self.ascii_symbols)
+
+    def test_individual_probs(self):
+        MultiQubitPauliNoise({"X": -0.1}, 1, self.ascii_symbols)
+        MultiQubitPauliNoise({"X": 1.1}, 1, self.ascii_symbols)
+
+    @pytest.mark.xfail(raises=TypeError)
+    def test_keys_strings(self):
+        MultiQubitPauliNoise({1: 1.1}, 1, self.ascii_symbols)
+
+    @pytest.mark.xfail(raises=TypeError)
+    def test_values_floats(self):
+        MultiQubitPauliNoise({"X": "str"}, 1, self.ascii_symbols)
