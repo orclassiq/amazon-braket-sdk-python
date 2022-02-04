@@ -407,8 +407,8 @@ def test_fixed_qubit_count(testclass, subroutine_name, irclass, irsubclasses, kw
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
 def test_serialization(testclass, subroutine_name, irclass, irsubclasses, kwargs):
     noise = testclass(**create_valid_noise_class_input(irsubclasses, **kwargs))
-    serialized = noise.serialize()
-    deserialized = Noise.deserialize(serialized)
+    serialized = noise.to_dict()
+    deserialized = Noise.from_dict(serialized)
     assert deserialized == noise
 
 

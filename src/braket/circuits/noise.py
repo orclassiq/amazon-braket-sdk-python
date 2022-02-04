@@ -80,11 +80,11 @@ class Noise(QuantumOperator):
         return f"{self.name}('qubit_count': {self.qubit_count})"
 
     @classmethod
-    def deserialize(cls, noise: dict) -> "Noise":
+    def from_dict(cls, noise: dict) -> "Noise":
         if "__class__" in noise:
             noise_name = noise["__class__"]
             noise_cls = getattr(cls, noise_name)
-            return noise_cls.deserialize(noise)
+            return noise_cls.from_dict(noise)
         raise NotImplementedError
 
     @classmethod
@@ -145,6 +145,9 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
     def __repr__(self):
         return f"{self.name}('probability': {self.probability}, 'qubit_count': {self.qubit_count})"
 
+    def __str__(self):
+        return f"{self.name}({self.probability})"
+
     @property
     def parameters(self) -> List[Union[FreeParameter, float]]:
         """
@@ -161,7 +164,14 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
             return self.name == other.name and self.probability == other.probability
         return NotImplemented
 
-    def serialize(self) -> dict:
+    def to_dict(self) -> dict:
+        """
+        Converts a this object into a dictionary representation.
+
+        Returns:
+            dict: A dictionary object that represents this object. It can be converted back
+            into this object using the `from_dict()` method.
+        """
         return {
             "__class__": self.__class__.__name__,
             "probability": self.probability,
@@ -355,6 +365,9 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
     def __repr__(self):
         return f"{self.name}('probabilities' : {self._probabilities}, 'qubit_count': {self.qubit_count})"  # noqa
 
+    def __str__(self):
+        return f"{self.name}({self._probabilities})"
+
     def __eq__(self, other):
         if isinstance(other, type(self)):
             return self.name == other.name and self._probabilities == other._probabilities
@@ -371,7 +384,14 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
         """
         return list(self._probabilities.values())
 
-    def serialize(self) -> dict:
+    def to_dict(self) -> dict:
+        """
+        Converts a this object into a dictionary representation.
+
+        Returns:
+            dict: A dictionary object that represents this object. It can be converted back
+            into this object using the `from_dict()` method.
+        """
         return {
             "__class__": self.__class__.__name__,
             "probabilities": self._probabilities,
@@ -505,7 +525,14 @@ class PauliNoise(Noise, Parameterizable):
         """
         return self._parameters
 
-    def serialize(self) -> dict:
+    def to_dict(self) -> dict:
+        """
+        Converts a this object into a dictionary representation.
+
+        Returns:
+            dict: A dictionary object that represents this object. It can be converted back
+            into this object using the `from_dict()` method.
+        """
         return {
             "__class__": self.__class__.__name__,
             "probX": self.probX,
@@ -585,6 +612,9 @@ class DampingNoise(Noise, Parameterizable):
     def __repr__(self):
         return f"{self.name}('gamma': {self.gamma}, 'qubit_count': {self.qubit_count})"
 
+    def __str__(self):
+        return f"{self.name}({self.gamma})"
+
     @property
     def parameters(self) -> List[Union[FreeParameter, float]]:
         """
@@ -601,7 +631,14 @@ class DampingNoise(Noise, Parameterizable):
             return self.name == other.name and self.gamma == other.gamma
         return NotImplemented
 
-    def serialize(self) -> dict:
+    def to_dict(self) -> dict:
+        """
+        Converts a this object into a dictionary representation.
+
+        Returns:
+            dict: A dictionary object that represents this object. It can be converted back
+            into this object using the `from_dict()` method.
+        """
         return {
             "__class__": self.__class__.__name__,
             "gamma": self.gamma,
@@ -677,6 +714,9 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise, Parameterizable):
         return f"{self.name}('gamma': {self.gamma}, 'probability': {self.probability}, \
 'qubit_count': {self.qubit_count})"
 
+    def __str__(self):
+        return f"{self.name}({self.gamma}, {self.probability})"
+
     @property
     def parameters(self) -> List[Union[FreeParameter, float]]:
         """
@@ -697,7 +737,14 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise, Parameterizable):
             )
         return NotImplemented
 
-    def serialize(self) -> dict:
+    def to_dict(self) -> dict:
+        """
+        Converts a this object into a dictionary representation.
+
+        Returns:
+            dict: A dictionary object that represents this object. It can be converted back
+            into this object using the `from_dict()` method.
+        """
         return {
             "__class__": self.__class__.__name__,
             "gamma": self.gamma,

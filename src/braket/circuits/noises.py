@@ -132,12 +132,12 @@ class BitFlip(SingleProbabilisticNoise):
         return BitFlip(probability=probability)
 
     @classmethod
-    def deserialize(cls, noise: dict) -> Noise:
+    def from_dict(cls, noise: dict) -> Noise:
         """
-        Deserializes a dictionary into this class.
+        Converts a dictionary representation of this class into this class.
 
         Args:
-            **kwargs: The parameters that are being assigned.
+            noise(dict): The dictionary representation of this noise.
 
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
@@ -233,12 +233,12 @@ class PhaseFlip(SingleProbabilisticNoise):
         return PhaseFlip(probability=probability)
 
     @classmethod
-    def deserialize(cls, noise: dict) -> Noise:
+    def from_dict(cls, noise: dict) -> Noise:
         """
-        Deserializes a dictionary into this class.
+        Converts a dictionary representation of this class into this class.
 
         Args:
-            **kwargs: The parameters that are being assigned.
+            noise(dict): The dictionary representation of this noise.
 
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
@@ -363,7 +363,16 @@ class PauliChannel(PauliNoise):
         return type(self)(probX=probX, probY=probY, probZ=probZ)
 
     @classmethod
-    def deserialize(cls, noise: dict) -> Noise:
+    def from_dict(cls, noise: dict) -> Noise:
+        """
+        Converts a dictionary representation of this class into this class.
+
+        Args:
+            noise(dict): The dictionary representation of this noise.
+
+        Returns:
+            Noise: A Noise object that represents the passed in dictionary.
+        """
         return PauliChannel(probX=noise["probX"], probY=noise["probY"], probZ=noise["probZ"])
 
 
@@ -475,12 +484,12 @@ class Depolarizing(SingleProbabilisticNoise_34):
         return Depolarizing(probability=probability)
 
     @classmethod
-    def deserialize(cls, noise: dict) -> Noise:
+    def from_dict(cls, noise: dict) -> Noise:
         """
-        Deserializes a dictionary into this class.
+        Converts a dictionary representation of this class into this class.
 
         Args:
-            **kwargs: The parameters that are being assigned.
+            noise(dict): The dictionary representation of this noise.
 
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
@@ -613,12 +622,12 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
         return TwoQubitDepolarizing(probability=probability)
 
     @classmethod
-    def deserialize(cls, noise: dict) -> Noise:
+    def from_dict(cls, noise: dict) -> Noise:
         """
-        Deserializes a dictionary into this class.
+        Converts a dictionary representation of this class into this class.
 
         Args:
-            **kwargs: The parameters that are being assigned.
+            noise(dict): The dictionary representation of this noise.
 
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
@@ -726,12 +735,12 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
         return TwoQubitDephasing(probability=probability)
 
     @classmethod
-    def deserialize(cls, noise: dict) -> Noise:
+    def from_dict(cls, noise: dict) -> Noise:
         """
-        Deserializes a dictionary into this class.
+        Converts a dictionary representation of this class into this class.
 
         Args:
-            **kwargs: The parameters that are being assigned.
+            noise(dict): The dictionary representation of this noise.
 
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
@@ -887,12 +896,12 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
         return TwoQubitPauliChannel(probabilities=probabilities)
 
     @classmethod
-    def deserialize(cls, noise: dict) -> Noise:
+    def from_dict(cls, noise: dict) -> Noise:
         """
-        Deserializes a dictionary into this class.
+        Converts a dictionary representation of this class into this class.
 
         Args:
-            **kwargs: The parameters that are being assigned.
+            noise(dict): The dictionary representation of this noise.
 
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
@@ -982,12 +991,12 @@ class AmplitudeDamping(DampingNoise):
         return AmplitudeDamping(gamma=gamma)
 
     @classmethod
-    def deserialize(cls, noise: dict) -> Noise:
+    def from_dict(cls, noise: dict) -> Noise:
         """
-        Deserializes a dictionary into this class.
+        Converts a dictionary representation of this class into this class.
 
         Args:
-            **kwargs: The parameters that are being assigned.
+            noise(dict): The dictionary representation of this noise.
 
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
@@ -1113,12 +1122,12 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
         return GeneralizedAmplitudeDamping(gamma=gamma, probability=probability)
 
     @classmethod
-    def deserialize(cls, noise: dict) -> Noise:
+    def from_dict(cls, noise: dict) -> Noise:
         """
-        Deserializes a dictionary into this class.
+        Converts a dictionary representation of this class into this class.
 
         Args:
-            **kwargs: The parameters that are being assigned.
+            noise(dict): The dictionary representation of this noise.
 
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
@@ -1209,12 +1218,12 @@ class PhaseDamping(DampingNoise):
         return PhaseDamping(gamma=gamma)
 
     @classmethod
-    def deserialize(cls, noise: dict) -> Noise:
+    def from_dict(cls, noise: dict) -> Noise:
         """
-        Deserializes a dictionary into this class.
+        Converts a dictionary representation of this class into this class.
 
         Args:
-            **kwargs: The parameters that are being assigned.
+            noise(dict): The dictionary representation of this noise.
 
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
@@ -1310,7 +1319,7 @@ class Kraus(Noise):
             Noise.Kraus(matrices=matrices, display_name=display_name), target=targets
         )
 
-    def serialize(self) -> dict:
+    def to_dict(self) -> dict:
         return {
             "__class__": self.__class__.__name__,
             "matrices": self._matrices,
@@ -1318,12 +1327,12 @@ class Kraus(Noise):
         }
 
     @classmethod
-    def deserialize(cls, noise: dict) -> Noise:
+    def from_dict(cls, noise: dict) -> Noise:
         """
-        Deserializes a dictionary into this class.
+        Converts a dictionary representation of this class into this class.
 
         Args:
-            **kwargs: The parameters that are being assigned.
+            noise(dict): The dictionary representation of this noise.
 
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
