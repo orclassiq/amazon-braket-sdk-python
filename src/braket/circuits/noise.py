@@ -664,7 +664,7 @@ class DampingNoise(Noise, Parameterizable):
         )
 
 
-class GeneralizedAmplitudeDampingNoise(DampingNoise, Parameterizable):
+class GeneralizedAmplitudeDampingNoise(DampingNoise):
     """
     Class `GeneralizedAmplitudeDampingNoise` represents the generalized amplitude damping
     noise channel on N qubits parameterized by gamma and probability.
